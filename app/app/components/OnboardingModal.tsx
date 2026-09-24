@@ -103,7 +103,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                 value={nationality}
                 onChange={(e) => setNationality(e.target.value)}
                 placeholder="es. marocchino, ucraino, cinese..."
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               />
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { UserProfile, loadProfile } from "@/lib/profile";
+import { UserProfile, loadProfile, PROFILE_KEY, HISTORY_KEY } from "@/lib/profile";
 import Chat from "./components/Chat";
 import OnboardingModal from "./components/OnboardingModal";
 import WizardPanel from "./components/WizardPanel";
@@ -43,6 +43,19 @@ export default function Home() {
             <span className="text-xs text-blue-200 hidden sm:block">
               {profile.nationality}
             </span>
+          )}
+          {process.env.NODE_ENV === "development" && (
+            <button
+              onClick={() => {
+                localStorage.removeItem(PROFILE_KEY);
+                localStorage.removeItem(HISTORY_KEY);
+                window.location.reload();
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-mono transition-colors"
+              title="Reset profilo (solo in sviluppo)"
+            >
+              ⟳ reset
+            </button>
           )}
           <button
             onClick={() => setWizardOpen(true)}
