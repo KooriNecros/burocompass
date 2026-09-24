@@ -32,6 +32,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# Claude Code local settings (machine-specific paths)
+.claude/settings.local.json
+
 # Logs
 *.log
 logs/
