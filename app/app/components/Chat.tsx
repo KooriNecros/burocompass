@@ -73,7 +73,7 @@ export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizard
       const data = await res.json();
 
       if (res.status === 429) {
-        throw new Error(data.error || "Il servizio è momentaneamente sovraccarico. Riprova tra qualche secondo.");
+        throw new Error(data.error || "Service temporarily unavailable. / Service temporairement indisponible. / خدمة غير متاحة مؤقتًا.");
       }
       if (!res.ok) {
         throw new Error(data.error || "Errore sconosciuto");
@@ -98,7 +98,7 @@ export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizard
         ...updatedMessages,
         {
           role: "assistant",
-          content: `Si è verificato un errore: ${err instanceof Error ? err.message : "Riprova più tardi."}`,
+          content: err instanceof Error ? err.message : "An error occurred. Please try again. / Une erreur s'est produite. / حدث خطأ. حاول مرة أخرى.",
         },
       ]);
     } finally {
