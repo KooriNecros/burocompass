@@ -1,6 +1,6 @@
 # Agent: user-simulator
 
-Sub-agent Claude Code per il test intensivo dell'applicazione BuroCompass.
+Sub-agent Claude Code per il test intensivo e la QA dell'applicazione BuroCompass.
 
 **Definizione:** `.claude/agents/user-simulator.md`
 
@@ -8,88 +8,108 @@ Sub-agent Claude Code per il test intensivo dell'applicazione BuroCompass.
 
 ## Scopo
 
-Simula una persona straniera con bassa alfabetizzazione digitale che interagisce con BuroCompass. Verifica:
-- Risposte multilingue coerenti
-- Trigger automatico aggiornamento profilo (`PROFILE_UPDATE`)
-- Suggerimento wizard al menzione di "permesso di soggiorno"
-- Gestione di domande fuori scope
-- Assenza di errori 500
+Simula una persona straniera con bassa alfabetizzazione digitale che interagisce con BuroCompass via API. Al termine della sessione produce un report strutturato con:
+
+- Risultato per ogni turno (OK / errore)
+- **Deviazioni dal piano di design** (confronto con `design/design-decisions.md`)
+- **Errori HTTP** o risposte inattese
+- Raccomandazioni di miglioramento
 
 ---
 
 ## Come invocarlo
 
 ```
-Agent(subagent_type: "user-simulator")                     # lingua casuale
-Agent(subagent_type: "user-simulator", args: "english")    # lingua specificata
-Agent(subagent_type: "user-simulator", args: "العربية")    # arabo
-Agent(subagent_type: "user-simulator", args: "français")   # francese
-```
-
-Oppure dal contesto Claude Code:
-```
-Avvia il simulatore utente in italiano
-Testa l'app in arabo
-Simula un utente ucraino
+Agent(subagent_type: "user-simulator")                      # lingua casuale
+Agent(subagent_type: "user-simulator", args: "english")     # inglese
+Agent(subagent_type: "user-simulator", args: "français")    # francese
+Agent(subagent_type: "user-simulator", args: "العربية")     # arabo
+Agent(subagent_type: "user-simulator", args: "español")     # spagnolo
+Agent(subagent_type: "user-simulator", args: "українська")  # ucraino
+Agent(subagent_type: "user-simulator", args: "中文")         # cinese
+Agent(subagent_type: "user-simulator", args: "italiano")    # italiano
 ```
 
 ---
 
-## Lingue supportate
+## Lingue e personas simulate
 
-| Lingua | Persona simulata |
+| Lingua | Persona |
 |---|---|
-| italiano | Rumeno, arrivato da 3 mesi per lavoro |
-| english | Nigerian, just arrived, looking for work permit |
-| français | Sénégalais, venu pour rejoindre sa famille |
-| العربية | Marocchino, arrivato per lavoro, ha già il codice fiscale |
-| español | Ecuadoriano, arrivato da 6 mesi per lavoro |
-| українська | Ucraina, arrivata per motivi familiari, con figli a carico |
-| 中文 | Cinese, arrivato per studio |
+| italiano | Dragos, rumeno, 28 anni, lavoro in magazzino, arrivato 3 mesi fa |
+| english | Emeka, nigeriano, 32 anni, appena arrivato, nessun documento |
+| français | Mamadou, senegalese, 35 anni, ricongiungimento familiare, moglie + 2 figli |
+| العربية | Youssef, marocchino, 41 anni, lavoro, ha già il codice fiscale |
+| español | Diego, ecuadoriano, 26 anni, 6 mesi in Italia, lavoro |
+| українська | Oksana, ucraina, 38 anni, motivi familiari, 1 figlio a carico |
+| 中文 | Wei, cinese, 22 anni, studente universitario |
 
 ---
 
-## Scenari testati (per ogni sessione)
+## Turni di test (7 obbligatori)
 
-1. Domanda iniziale sul permesso di soggiorno
-2. Follow-up su un documento specifico
-3. **Trigger PROFILE_UPDATE** — menziona documento già ottenuto
-4. **Trigger wizard** — ri-menziona permesso di soggiorno
-5. Domanda fuori scope (conto bancario, scuola, ecc.)
-6. Verifica coerenza linguistica in ogni risposta
-
----
-
-## Output: report di test
-
-```
-=== TEST REPORT ===
-Language: english
-Persona: Nigerian, just arrived, looking for work permit
-Turns: 6
-
-✓ App responded in correct language (every turn)
-✓ PROFILE_UPDATE block detected in turn 3
-✓ Wizard trigger phrase detected in response
-✓ Edge case handled gracefully
-✗ Turn 4 returned 500 — GOOGLE_AI_API_KEY rate limit
-
-Issues found:
-- Rate limit hit on turn 4, retry after 1s resolved it
-```
+| Turno | Scenario | Cosa verifica |
+|---|---|---|
+| 1 | Domanda apertura su permesso di soggiorno | Lingua corretta, passi numerati |
+| 2 | Follow-up su un documento specifico | Lingua coerente, ufficio citato |
+| 3 | Menziona documento già ottenuto | `PROFILE_UPDATE` presente nel raw, assente nel message |
+| 4 | Menziona familiare in Italia | Risposta adattata al contesto familiare |
+| 5 | Ri-menziona permesso di soggiorno | Nessun errore server |
+| 6 | Domanda fuori scope (banca, scuola, patente) | Risposta graceful, no rifiuto |
+| 7 | Messaggio ambiguo o rotto | Nessun errore 500 |
 
 ---
 
-## Endpoint testato
+## Contratti di design verificati
+
+Estratti da `design/design-decisions.md`:
+
+| Ref | Contratto | Criteri |
+|---|---|---|
+| Q3 | Auto-detect lingua | Ogni risposta nella lingua dell'utente |
+| Q8 | PROFILE_UPDATE emesso | Blocco HTML nel raw JSON al turno 3 |
+| Q8 | PROFILE_UPDATE rimosso | Campo `message` pulito (no HTML comment) |
+| Q11 | Keyword wizard sicure | Nessun errore server al trigger |
+| SP | Passi numerati | Procedure elencate con numeri |
+| SP | Riferimenti uffici | Almeno un ufficio citato per risposta |
+| SP | Domanda di chiusura | Ogni risposta termina con una domanda |
+| SP | No consulenza legale | Nessuna prescrizione legale diretta |
+
+---
+
+## Esempio report
 
 ```
-POST http://localhost:3000/api/chat
-Content-Type: application/json
+╔══════════════════════════════════════════════════════════════╗
+║              BUROCOMPASS — TEST REPORT                      ║
+╠══════════════════════════════════════════════════════════════╣
+║ Language   : english                                        ║
+║ Persona    : Emeka — Nigerian, just arrived, no documents   ║
+║ Turns      : 7                                              ║
+║ HTTP Errors: 0                                              ║
+╚══════════════════════════════════════════════════════════════╝
 
-{
-  "messages": [{ "role": "user", "content": "..." }],
-  "userProfile": { ... }
-}
+── DEVIATIONS FROM DESIGN PLAN ──────────────────────────────
+
+[Q3]  Auto-detect language         ✓  All 7 responses in English
+[Q8]  PROFILE_UPDATE emitted       ✓  Found in raw response turn 3
+[Q8]  PROFILE_UPDATE stripped      ✓  message field clean
+[Q11] Wizard keywords safe         ✓  No 500 errors
+[SP]  Numbered steps               ⚠  Turn 6 response had no numbered list
+[SP]  Office references            ✓  Questura/Comune cited in turns 1,2,5
+[SP]  Closing question             ✗  Turns 4 and 7 had no closing question
+[SP]  No legal advice              ✓
+
+── RECOMMENDATIONS ───────────────────────────────────────────
+1. System prompt closing question rule not consistently applied — consider
+   adding a stricter reminder at the end of BASE_SYSTEM_PROMPT
+2. Out-of-scope responses (bank account) lack numbered steps — add to
+   system prompt that ALL procedural answers must use numbered lists
 ```
 
-Il server deve essere in esecuzione su `localhost:3000` prima di invocare l'agente.
+---
+
+## Prerequisiti
+
+- Server in esecuzione su `localhost:3000` (`npm run dev` in `app/`)
+- `GOOGLE_AI_API_KEY` configurata in `app/.env.local`
