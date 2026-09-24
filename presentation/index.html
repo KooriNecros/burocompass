@@ -3,15 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BuroCompass — Hackathon Presentation</title>
+  <title>BuroCompass — Hagenthon 2026</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --purple: #a100ff;
+      --orange: #ff5200;
+      --bg: #06000d;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: #fff;
       overflow: hidden;
+      line-height: 1.6;
     }
 
     .slides { width: 100vw; height: 100vh; position: relative; }
@@ -21,140 +30,230 @@
       inset: 0;
       display: none;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 60px;
-      text-align: center;
+      padding: 32px 56px 76px;
+      overflow: hidden;
     }
     .slide.active { display: flex; }
 
-    /* Slide 1 — Cover */
-    .slide-cover { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0284c7 100%); }
-    .slide-cover .emoji { font-size: 80px; margin-bottom: 20px; }
-    .slide-cover h1 { font-size: 64px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
-    .slide-cover .tagline { font-size: 22px; color: #bfdbfe; margin-bottom: 40px; }
-    .slide-cover .team { font-size: 16px; color: #93c5fd; }
-
-    /* Slide 2 — Problem */
-    .slide-problem { background: #1e293b; }
-    .slide-problem h2 { font-size: 40px; font-weight: 700; color: #f97316; margin-bottom: 40px; }
-    .problems { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 900px; }
-    .problem-card {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 24px;
-      text-align: left;
+    /* Top gradient bar — key element from Townhall PDF */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple) 0%, #cc44ff 40%, var(--orange) 100%);
     }
-    .problem-card .icon { font-size: 32px; margin-bottom: 12px; }
-    .problem-card h3 { font-size: 16px; font-weight: 600; color: #f97316; margin-bottom: 8px; }
-    .problem-card p { font-size: 14px; color: #94a3b8; line-height: 1.5; }
 
-    /* Slide 3 — Solution */
-    .slide-solution { background: linear-gradient(180deg, #0f172a 0%, #0c1a35 100%); }
-    .slide-solution h2 { font-size: 40px; font-weight: 700; color: #60a5fa; margin-bottom: 40px; }
-    .features { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 100%; max-width: 960px; }
-    .feature {
-      background: #1e293b;
-      border: 1px solid #1e40af;
-      border-radius: 16px;
-      padding: 28px 20px;
+    /* Brand header */
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: 14px;
     }
-    .feature .icon { font-size: 36px; margin-bottom: 14px; }
-    .feature h3 { font-size: 16px; font-weight: 700; color: #93c5fd; margin-bottom: 8px; }
-    .feature p { font-size: 13px; color: #64748b; line-height: 1.5; }
+    .brand .logo { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand .logo .mark { color: var(--purple); }
+    .brand .org { text-align: right; font-size: 9px; line-height: 1.4; }
+    .brand .org .a { display: block; text-transform: uppercase; letter-spacing: 0.25em; font-weight: 700; }
+    .brand .org .b { color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.2em; }
 
-    /* Slide 4 — Architecture */
-    .slide-arch { background: #0f172a; }
-    .slide-arch h2 { font-size: 40px; font-weight: 700; color: #34d399; margin-bottom: 40px; }
-    .arch-diagram {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 20px;
-      padding: 40px 60px;
-      font-family: "Courier New", monospace;
-      font-size: 14px;
-      color: #94a3b8;
-      line-height: 2;
-      text-align: left;
-      max-width: 860px;
-      width: 100%;
-    }
-    .arch-diagram .highlight { color: #34d399; font-weight: bold; }
-    .arch-diagram .dim { color: #475569; }
-
-    /* Slide 5 — Stack */
-    .slide-stack { background: #1e293b; }
-    .slide-stack h2 { font-size: 40px; font-weight: 700; color: #a78bfa; margin-bottom: 40px; }
-    .stack-items { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
-    .stack-item {
-      background: #0f172a;
-      border: 1px solid #4c1d95;
-      border-radius: 14px;
-      padding: 20px 30px;
+    /* Slide body */
+    .slide-body {
+      flex: 1;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 10px;
-    }
-    .stack-item .icon { font-size: 36px; }
-    .stack-item span { font-size: 14px; font-weight: 600; color: #c4b5fd; }
-    .stack-item small { font-size: 12px; color: #6b7280; }
-
-    /* Slide 6 — Demo */
-    .slide-demo { background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #0f4c35 100%); }
-    .slide-demo h2 { font-size: 48px; font-weight: 800; margin-bottom: 20px; }
-    .slide-demo .sub { font-size: 22px; color: #6ee7b7; margin-bottom: 50px; }
-    .demo-steps { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
-    .demo-step {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 14px;
-      padding: 20px;
-      width: 160px;
       text-align: center;
     }
-    .demo-step .num { font-size: 28px; font-weight: 800; color: #34d399; }
-    .demo-step p { font-size: 13px; color: #a7f3d0; margin-top: 8px; line-height: 1.4; }
+
+    /* Section label — Townhall PDF style: small uppercase, letter-spaced, orange/purple line */
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      color: rgba(255, 82, 0, 0.75);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* Eyebrow pill */
+    .eyebrow {
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.035);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 14px;
+    }
+
+    /* Gradient text — extended toward orange per PDF palette */
+    .grad {
+      background: linear-gradient(90deg, var(--purple) 0%, #cc44ff 55%, #ff5200 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .orange { color: var(--orange); }
+
+    h1 { font-size: 54px; font-weight: 900; letter-spacing: -0.04em; line-height: 1.02; margin-bottom: 14px; }
+    h2 { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 18px; }
+
+    .slide-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,0.52);
+      max-width: 580px;
+      margin: 0 auto 26px;
+      line-height: 1.65;
+    }
+
+    /* Cards */
+    .card {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      padding: 18px 20px;
+      text-align: left;
+    }
+    .card.purple {
+      border-color: rgba(161,0,255,0.22);
+      background: rgba(161,0,255,0.04);
+    }
+    .card.orange-card {
+      border-color: rgba(255,82,0,0.22);
+      background: rgba(255,82,0,0.04);
+    }
+    .card .card-icon { font-size: 24px; margin-bottom: 9px; }
+    .card h3 { font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 6px; letter-spacing: -0.01em; }
+    .card p { font-size: 12.5px; color: rgba(255,255,255,0.48); line-height: 1.58; margin: 0; }
+    .card strong { color: rgba(255,255,255,0.8); }
+    .card code { font-size: 11px; color: rgba(161,0,255,0.8); background: rgba(161,0,255,0.08); border-radius: 4px; padding: 1px 5px; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      border: 1px solid rgba(161,0,255,0.35);
+      background: rgba(161,0,255,0.1);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: monospace;
+      color: rgba(161,0,255,0.9);
+      margin-bottom: 7px;
+    }
+    .badge.green { border-color: rgba(0,200,100,0.3); background: rgba(0,200,100,0.07); color: rgba(0,220,110,0.9); }
+    .badge.dim { border-color: rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.38); }
+    .badge.orange-b { border-color: rgba(255,82,0,0.35); background: rgba(255,82,0,0.1); color: rgba(255,120,60,0.95); }
+
+    /* Grids */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 860px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; width: 100%; max-width: 960px; }
+
+    /* Cover */
+    .cover-emoji { font-size: 52px; margin-bottom: 12px; }
+    .cover-team { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 22px; text-transform: uppercase; letter-spacing: 0.22em; }
+
+    /* Arch box */
+    .arch-box {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 22px 30px;
+      font-family: "Courier New", monospace;
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.5);
+      line-height: 2;
+      text-align: left;
+      width: 100%;
+      max-width: 800px;
+    }
+    .arch-box .hi  { color: rgba(161,0,255,0.85); font-weight: bold; }
+    .arch-box .hi2 { color: rgba(255,255,255,0.9); font-weight: bold; }
+
+    /* Stack */
+    .stack-grid { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; max-width: 840px; }
+    .stack-item {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      padding: 16px 22px;
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      min-width: 128px;
+    }
+    .stack-item .icon { font-size: 28px; }
+    .stack-item .name { font-size: 13px; font-weight: 700; }
+    .stack-item .sub  { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+    /* Demo */
+    .demo-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+    .demo-step {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 14px;
+      width: 148px;
+      text-align: center;
+    }
+    .demo-step .num { font-size: 20px; font-weight: 900; color: rgba(161,0,255,0.8); }
+    .demo-step p    { font-size: 11.5px; color: rgba(255,255,255,0.5); margin-top: 5px; line-height: 1.4; }
+    .demo-arr       { color: rgba(255,255,255,0.16); font-size: 16px; }
+
+    /* Grill decision grid — mini-cards coerenti con .card */
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 960px;
+      margin-top: 4px;
+    }
+    .d-item {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      padding: 12px 14px;
+      text-align: left;
+    }
+    .d-item h4 { font-size: 12px; font-weight: 700; color: #fff; margin: 5px 0 4px; letter-spacing: -0.01em; }
+    .d-item .desc { font-size: 11px; color: rgba(255,255,255,0.48); line-height: 1.5; display: block; }
+    .d-item.delta { border-color: rgba(255,82,0,0.22); background: rgba(255,82,0,0.04); }
 
     /* Navigation */
     nav {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 50px;
-      padding: 10px 20px;
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 999px;
+      padding: 7px 18px;
       z-index: 100;
     }
     nav button {
-      background: none;
-      border: none;
-      color: #f1f5f9;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px 10px;
-      border-radius: 8px;
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 18px; cursor: pointer; padding: 3px 8px; border-radius: 6px;
       transition: background 0.15s;
     }
-    nav button:hover { background: rgba(255,255,255,0.1); }
-    nav button:disabled { opacity: 0.3; cursor: default; }
-    .dots { display: flex; gap: 8px; }
+    nav button:hover { background: rgba(255,255,255,0.07); }
+    nav button:disabled { opacity: 0.2; cursor: default; }
+    .dots { display: flex; gap: 6px; }
     .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      cursor: pointer;
-      transition: background 0.2s;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.18); cursor: pointer;
+      transition: all 0.2s;
     }
-    .dot.active { background: #60a5fa; }
-    .slide-counter { font-size: 13px; color: #64748b; min-width: 40px; text-align: center; }
+    .dot.active { background: var(--purple); transform: scale(1.35); }
+    .slide-counter { font-size: 10px; color: rgba(255,255,255,0.25); min-width: 34px; text-align: center; letter-spacing: 0.1em; }
   </style>
 </head>
 <body>
@@ -162,154 +261,326 @@
 <div class="slides">
 
   <!-- Slide 1: Cover -->
-  <div class="slide slide-cover active">
-    <div class="emoji">🧭</div>
-    <h1>BuroCompass</h1>
-    <p class="tagline">L'assistente digitale per stranieri nella burocrazia italiana</p>
-    <p class="team">Francesco Giovo &amp; Manuel Marseglia — Hackathon 2026</p>
+  <div class="slide active">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <div class="cover-emoji">🧭</div>
+      <span class="eyebrow">Hagenthon 2026 · Tema 03 — Educazione Digitale Inclusiva</span>
+      <h1>Buro<span class="grad">Compass</span></h1>
+      <p class="slide-sub">L'assistente digitale che guida gli stranieri<br>nella burocrazia italiana, nella loro lingua.</p>
+      <p class="cover-team">Francesco Giovo &amp; Manuel Marseglia</p>
+    </div>
   </div>
 
-  <!-- Slide 2: Problem -->
-  <div class="slide slide-problem">
-    <h2>Il Problema</h2>
-    <div class="problems">
-      <div class="problem-card">
-        <div class="icon">🗣️</div>
-        <h3>Barriera linguistica</h3>
-        <p>Il linguaggio burocratico italiano è opaco anche per gli italofoni. Per gli stranieri è invalicabile senza supporto.</p>
-      </div>
-      <div class="problem-card">
-        <div class="icon">🏛️</div>
-        <h3>Frammentazione degli enti</h3>
-        <p>Comune, Questura, Prefettura, INPS, ASL: ogni pratica porta a un ente diverso con regole diverse.</p>
-      </div>
-      <div class="problem-card">
-        <div class="icon">🔄</div>
-        <h3>Circolo vizioso del digitale</h3>
-        <p>Serve SPID per accedere ai servizi, ma per ottenere SPID servono documenti che richiedono altri servizi.</p>
-      </div>
-      <div class="problem-card">
-        <div class="icon">🧩</div>
-        <h3>Dipendenza da intermediari</h3>
-        <p>Chi non ce la fa si affida a patronati o conoscenti, restando vulnerabile alla prossima pratica.</p>
+  <!-- Slide 2: Il Problema -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">Il Problema</span>
+      <h2>Burocrazia <span class="grad">inaccessibile</span></h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-icon">🗣️</div>
+          <h3>Barriera linguistica</h3>
+          <p>Il linguaggio burocratico italiano è opaco anche per gli italofoni. Per gli stranieri è invalicabile senza supporto.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🏛️</div>
+          <h3>Frammentazione degli enti</h3>
+          <p>Comune, Questura, Prefettura, INPS, ASL: ogni pratica porta a un ente diverso con regole diverse.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔄</div>
+          <h3>Circolo vizioso del digitale</h3>
+          <p>Serve SPID per accedere ai servizi, ma per ottenere SPID servono documenti che richiedono altri servizi.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🧩</div>
+          <h3>Dipendenza da intermediari</h3>
+          <p>Chi non ce la fa si affida a patronati o conoscenti, restando vulnerabile alla prossima pratica.</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Slide 3: Solution -->
-  <div class="slide slide-solution">
-    <h2>La Soluzione</h2>
-    <div class="features">
-      <div class="feature">
-        <div class="icon">💬</div>
-        <h3>Chat multilingue</h3>
-        <p>Risponde nella lingua dell'utente. Auto-detect automatico. Nessun selettore.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">📋</div>
-        <h3>Wizard guidato</h3>
-        <p>Flow step-by-step per il permesso di soggiorno. Checklist documenti personalizzata.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">👤</div>
-        <h3>Profilo adattivo</h3>
-        <p>L'agente apprende dalla conversazione e aggiorna il profilo utente in automatico.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">💾</div>
-        <h3>Zero server esterni</h3>
-        <p>Tutto gira in locale. Profilo e storico salvati in localStorage.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">🎯</div>
-        <h3>Linguaggio semplice</h3>
-        <p>Niente gergo burocratico. Passi numerati. Uffici indicati per ogni procedura.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">📱</div>
-        <h3>Mobile first</h3>
-        <p>Ottimizzato per smartphone. Layout adattivo con tab per wizard e chat.</p>
+  <!-- Slide 3: La Soluzione -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">La Soluzione</span>
+      <h2>Come <span class="grad">funziona</span></h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon">💬</div>
+          <h3>Chat multilingue</h3>
+          <p>Risponde nella lingua dell'utente. Auto-detect automatico. Nessun selettore da scegliere.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📋</div>
+          <h3>Wizard guidato</h3>
+          <p>Flow step-by-step per il permesso di soggiorno. Checklist documenti personalizzata per situazione.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">👤</div>
+          <h3>Profilo adattivo</h3>
+          <p>L'agente apprende dalla conversazione e aggiorna il profilo utente in automatico, senza chiederlo.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">💾</div>
+          <h3>Zero server esterni</h3>
+          <p>Tutto gira in locale. Profilo e storico salvati in localStorage. Nessun account richiesto.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🎯</div>
+          <h3>Linguaggio semplice</h3>
+          <p>Niente gergo burocratico. Passi numerati. Uffici indicati chiaramente per ogni procedura.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📱</div>
+          <h3>Mobile first</h3>
+          <p>Ottimizzato per smartphone. Layout adattivo con tab per wizard e chat separati.</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Slide 4: Architecture -->
-  <div class="slide slide-arch">
-    <h2>Architettura Agentica</h2>
-    <div class="arch-diagram">
-      <span class="dim">UTENTE</span> → <span class="highlight">Chat Interface</span> → <span class="highlight">BuroCompass Agent</span> (Claude Sonnet)<br>
-      <br>
-      <span class="highlight">BuroCompass Agent</span><br>
-      <span class="dim">  ├─ System prompt base (ruolo + competenze)</span><br>
-      <span class="dim">  ├─ Profilo utente iniettato dinamicamente</span><br>
-      <span class="dim">  ├─ Risposta in lingua dell'utente</span><br>
-      <span class="dim">  └─ Emette </span><span class="highlight">&lt;!--PROFILE_UPDATE:{...}--&gt;</span><span class="dim"> se apprende info nuove</span><br>
-      <br>
-      <span class="highlight">Route Handler</span> (Next.js API)<br>
-      <span class="dim">  ├─ Parsa il blocco PROFILE_UPDATE dalla risposta</span><br>
-      <span class="dim">  ├─ Rimuove il blocco dal testo visibile</span><br>
-      <span class="dim">  └─ Ritorna </span><span class="highlight">{ message, profileUpdate? }</span><br>
-      <br>
-      <span class="highlight">localStorage</span><span class="dim"> ← profilo + storico (max 10 msg)</span>
+  <!-- Slide 4: Architettura Agentica -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
     </div>
-  </div>
-
-  <!-- Slide 5: Stack -->
-  <div class="slide slide-stack">
-    <h2>Stack Tecnologico</h2>
-    <div class="stack-items">
-      <div class="stack-item">
-        <div class="icon">▲</div>
-        <span>Next.js 16</span>
-        <small>App Router + API Routes</small>
-      </div>
-      <div class="stack-item">
-        <div class="icon">🤖</div>
-        <span>Claude Sonnet</span>
-        <small>Anthropic SDK</small>
-      </div>
-      <div class="stack-item">
-        <div class="icon">🔷</div>
-        <span>TypeScript</span>
-        <small>Type-safe end-to-end</small>
-      </div>
-      <div class="stack-item">
-        <div class="icon">🎨</div>
-        <span>Tailwind CSS v4</span>
-        <small>Mobile-first UI</small>
-      </div>
-      <div class="stack-item">
-        <div class="icon">💾</div>
-        <span>localStorage</span>
-        <small>Profilo + storico</small>
+    <div class="slide-body">
+      <span class="section-label">Architettura</span>
+      <h2>Design <span class="grad">agentico</span></h2>
+      <div class="arch-box">
+        <span class="hi2">UTENTE</span> → <span class="hi">Chat Interface</span> → <span class="hi">BuroCompass Agent</span> (Claude Sonnet)<br>
+        <br>
+        <span class="hi">BuroCompass Agent</span><br>
+        &nbsp;&nbsp;├─ System prompt base (ruolo + 14 aree di competenza)<br>
+        &nbsp;&nbsp;├─ Profilo utente iniettato dinamicamente a ogni chiamata<br>
+        &nbsp;&nbsp;├─ Risponde nella lingua dell'utente (auto-detect)<br>
+        &nbsp;&nbsp;└─ Emette <span class="hi">&lt;!--PROFILE_UPDATE:{...}--&gt;</span> quando apprende nuove info<br>
+        <br>
+        <span class="hi">Route Handler</span> (Next.js API)<br>
+        &nbsp;&nbsp;├─ Parsa il blocco PROFILE_UPDATE con regex<br>
+        &nbsp;&nbsp;├─ Rimuove il blocco dal testo visibile all'utente<br>
+        &nbsp;&nbsp;└─ Ritorna <span class="hi">{ message, profileUpdate? }</span><br>
+        <br>
+        <span class="hi">localStorage</span> ← profilo strutturato + storico (max 10 msg)
       </div>
     </div>
   </div>
 
-  <!-- Slide 6: Demo -->
-  <div class="slide slide-demo">
-    <h2>Demo Flow</h2>
-    <p class="sub">Primo avvio → Onboarding → Chat → Wizard → Profilo aggiornato</p>
-    <div class="demo-steps">
-      <div class="demo-step">
-        <div class="num">1</div>
-        <p>Primo avvio: modale onboarding (5 campi)</p>
+  <!-- Slide 5: Struttura Agentica -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">Agenti · Skills · Workflow</span>
+      <h2>Elementi <span class="grad">agentici</span></h2>
+      <div class="grid-3">
+        <div class="card purple">
+          <span class="badge">agent</span>
+          <h3>BuroCompassAgent</h3>
+          <p>Agente principale in <code>api/chat/route.ts</code>. Claude Sonnet, multilingue, 14 aree di competenza. Emette blocchi PROFILE_UPDATE nascosti per aggiornare il profilo senza interrompere la chat.</p>
+        </div>
+        <div class="card purple">
+          <span class="badge">sub-agent</span>
+          <h3>user-simulator</h3>
+          <p>QA automatizzato in Claude Code. Simula 7 personas in 7 lingue, esegue 7 turni di conversazione, apre issue GitHub in automatico a ogni deviazione rilevata dal design contract.</p>
+        </div>
+        <div class="card purple">
+          <span class="badge">sub-agent</span>
+          <h3>test-and-commit</h3>
+          <p>CI/CD locale in Claude Code. Invocato dopo ogni modifica al codice: esegue <code>tsc --noEmit</code> → <code>npm run build</code> → <code>git commit</code> → <code>git push</code>. Blocca il push se i check falliscono.</p>
+        </div>
+        <div class="card">
+          <span class="badge green">workflow</span>
+          <h3>Profile Update</h3>
+          <p>Flusso silenzioso per l'aggiornamento del profilo utente. Il modello emette JSON in commento HTML; il route handler lo estrae, lo rimuove dal testo, lo invia al client per il merge in localStorage.</p>
+        </div>
+        <div class="card">
+          <span class="badge green">workflow</span>
+          <h3>Test → Commit → Push</h3>
+          <p>Pipeline di qualità: type-check + build obbligatori prima di ogni push. Invocabile come sub-agent Claude Code o come script PowerShell standalone (<code>agents/test-and-commit.ps1</code>).</p>
+        </div>
+        <div class="card">
+          <span class="badge dim">skill</span>
+          <h3>grilling</h3>
+          <p>Intervista relentless per stress-testare decisioni architetturali. Esplora un design tree a round fino a frontiera vuota. Usata nella fase di progettazione per definire le scelte chiave di BuroCompass.</p>
+        </div>
       </div>
-      <div class="demo-step">
-        <div class="num">2</div>
-        <p>Chat multilingue con suggerimenti rapidi</p>
+    </div>
+  </div>
+
+  <!-- Slide 6: Stack Tecnologico -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">Stack Tecnologico</span>
+      <h2>Tecnologie <span class="grad">utilizzate</span></h2>
+      <div class="stack-grid">
+        <div class="stack-item">
+          <div class="icon">▲</div>
+          <span class="name">Next.js 16</span>
+          <span class="sub">App Router + API Routes</span>
+        </div>
+        <div class="stack-item">
+          <div class="icon">🤖</div>
+          <span class="name">Claude Sonnet</span>
+          <span class="sub">Anthropic SDK</span>
+        </div>
+        <div class="stack-item">
+          <div class="icon">🔷</div>
+          <span class="name">TypeScript</span>
+          <span class="sub">Type-safe end-to-end</span>
+        </div>
+        <div class="stack-item">
+          <div class="icon">🎨</div>
+          <span class="name">Tailwind CSS v4</span>
+          <span class="sub">Mobile-first UI</span>
+        </div>
+        <div class="stack-item">
+          <div class="icon">💾</div>
+          <span class="name">localStorage</span>
+          <span class="sub">Profilo + storico</span>
+        </div>
+        <div class="stack-item">
+          <div class="icon">🐙</div>
+          <span class="name">GitHub</span>
+          <span class="sub">Repo + issue tracking QA</span>
+        </div>
       </div>
-      <div class="demo-step">
-        <div class="num">3</div>
-        <p>Keyword "permesso" → proposta wizard</p>
+    </div>
+  </div>
+
+  <!-- Slide 7: Demo Flow -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">Demo</span>
+      <h2>Demo <span class="grad">flow</span></h2>
+      <p class="slide-sub">Primo avvio → Onboarding → Chat → Wizard → Profilo aggiornato</p>
+      <div class="demo-row">
+        <div class="demo-step">
+          <div class="num">1</div>
+          <p>Primo avvio: modale onboarding (5 campi)</p>
+        </div>
+        <span class="demo-arr">→</span>
+        <div class="demo-step">
+          <div class="num">2</div>
+          <p>Chat multilingue con suggerimenti rapidi</p>
+        </div>
+        <span class="demo-arr">→</span>
+        <div class="demo-step">
+          <div class="num">3</div>
+          <p>Keyword "permesso" → proposta wizard</p>
+        </div>
+        <span class="demo-arr">→</span>
+        <div class="demo-step">
+          <div class="num">4</div>
+          <p>Wizard: 5 step, checklist documenti</p>
+        </div>
+        <span class="demo-arr">→</span>
+        <div class="demo-step">
+          <div class="num">5</div>
+          <p>"Ho il codice fiscale" → profilo aggiornato ✓</p>
+        </div>
       </div>
-      <div class="demo-step">
-        <div class="num">4</div>
-        <p>Wizard: 5 step, checklist documenti</p>
+    </div>
+  </div>
+
+  <!-- Slide 8: Approccio Progettuale — AI + Umano -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">Processo Progettuale · AI + Umano</span>
+      <h2>Prima le decisioni, <span class="grad">poi il codice</span></h2>
+      <div class="grid-3" style="max-width:960px; margin-bottom:14px;">
+        <div class="card purple">
+          <span class="badge">skill · /grill-me</span>
+          <h3>Intervista relentless a round</h3>
+          <p>La skill mappa tutte le decisioni aperte del design (<em>il "frontier"</em>), propone opzioni numerate con raccomandazione, e <strong>aspetta la scelta umana</strong>. Il ciclo si ripete fino a frontier vuota. Zero codice finché non è tutto deciso.</p>
+        </div>
+        <div class="card purple">
+          <span class="badge">2 round · 12 decisioni</span>
+          <h3>Processo in due fasi</h3>
+          <p><strong>Round 1</strong> (Q1–Q8): interaction model, lingua, persistenza, profilo, wizard, onboarding, storico, PROFILE_UPDATE.<br><strong>Round 2</strong> (Q9–Q12): layout wizard+chat, campi familiari, trigger wizard, feedback visivo.</p>
+        </div>
+        <div class="card orange-card">
+          <span class="badge orange-b">principio chiave</span>
+          <h3>AI propone · Umano decide</h3>
+          <p>In <strong>3 casi su 12</strong> (Q1, Q8, Q10) il team ha <strong>raffinato o esteso</strong> la proposta AI invece di accettarla passivamente. Il documento <code>design-decisions.md</code> è diventato direttamente il piano di implementazione.</p>
+        </div>
       </div>
-      <div class="demo-step">
-        <div class="num">5</div>
-        <p>"Ho il codice fiscale" → profilo aggiornato ✓</p>
+      <div class="decision-grid">
+        <div class="d-item delta"><span class="badge orange-b">Q1 ⟳</span><h4>Interaction model</h4><span class="desc">Chat + wizard (AI: C) → chat come nucleo (team: B›C)</span></div>
+        <div class="d-item"><span class="badge">Q2</span><h4>Golden path</h4><span class="desc">Permesso di soggiorno — allineati</span></div>
+        <div class="d-item"><span class="badge">Q3</span><h4>Lingua</h4><span class="desc">Auto-detect, nessun selettore — allineati</span></div>
+        <div class="d-item"><span class="badge">Q4</span><h4>Persistenza</h4><span class="desc">localStorage profilo + storico — allineati</span></div>
+        <div class="d-item"><span class="badge">Q5</span><h4>Profondità wizard</h4><span class="desc">Checklist dinamica per situazione — allineati</span></div>
+        <div class="d-item"><span class="badge">Q6</span><h4>Onboarding</h4><span class="desc">Modale 5 campi, low digital literacy — allineati</span></div>
+        <div class="d-item"><span class="badge">Q7</span><h4>Storico chat</h4><span class="desc">Max 10 messaggi, priorità al profilo — allineati</span></div>
+        <div class="d-item delta"><span class="badge orange-b">Q8 ⟳</span><h4>Aggiornamento profilo</h4><span class="desc">PROFILE_UPDATE + vincolo di limitazione aggiunto dal team</span></div>
+        <div class="d-item"><span class="badge">Q9</span><h4>Wizard + chat</h4><span class="desc">Affiancato, chat sempre visibile — allineati</span></div>
+        <div class="d-item delta"><span class="badge orange-b">Q10 ⟳</span><h4>Campi familiari</h4><span class="desc">Distinzione carico/non carico aggiunta dal team</span></div>
+        <div class="d-item"><span class="badge">Q11</span><h4>Trigger wizard</h4><span class="desc">Auto-detect keyword + bottone — allineati</span></div>
+        <div class="d-item"><span class="badge">Q12</span><h4>Feedback profilo</h4><span class="desc">Toast auto-dismiss 4s — allineati</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 9: Prossime Implementazioni -->
+  <div class="slide">
+    <div class="brand">
+      <span class="logo">Hagenthon<span class="mark">></span></span>
+      <span class="org"><span class="a">Accenture</span><span class="b">Application Engineering</span></span>
+    </div>
+    <div class="slide-body">
+      <span class="section-label">Roadmap</span>
+      <h2>Prossime <span class="grad">implementazioni</span></h2>
+      <div class="grid-2">
+        <div class="card purple">
+          <div class="card-icon">📄</div>
+          <h3>Profilo da scansione documento</h3>
+          <p>Definizione automatica del profilo utente tramite scansione di un documento del paese di origine: i dati anagrafici popolano l'onboarding senza inserimento manuale.</p>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">🧭</div>
+          <h3>Nuovi workflow guidati</h3>
+          <p>Estensione oltre il permesso di soggiorno: nuovi flussi wizard per altre pratiche (codice fiscale, SPID, iscrizione SSN, residenza) con checklist dedicate.</p>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">📱</div>
+          <h3>Diffusione web + APP</h3>
+          <p>Distribuzione dell'applicazione sia in formato web responsive, sia come app nativa mobile, per raggiungere gli utenti sul canale a loro più accessibile.</p>
+        </div>
+        <div class="card purple">
+          <div class="card-icon">🎙️</div>
+          <h3>Input vocale</h3>
+          <p>Inserimento dati tramite prompt vocali: abbatte la barriera della digitazione per utenti con bassa digital literacy o difficoltà con la tastiera.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -321,7 +592,7 @@
   <button id="prev" onclick="changeSlide(-1)" disabled>‹</button>
   <div class="dots" id="dots"></div>
   <button id="next" onclick="changeSlide(1)">›</button>
-  <span class="slide-counter" id="counter">1 / 6</span>
+  <span class="slide-counter" id="counter">1 / 9</span>
 </nav>
 
 <script>
@@ -351,7 +622,7 @@
 
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
   });
 </script>
 </body>
