@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { UserProfile, Message, formatProfileForPrompt } from "@/lib/profile";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY ?? "");
+const GEMINI_MODEL = process.env.GOOGLE_AI_MODEL ?? "gemini-2.0-flash";
 
 const BASE_SYSTEM_PROMPT = `Sei BuroCompass, un assistente digitale che aiuta persone straniere a orientarsi nella burocrazia italiana.
 
@@ -10,6 +11,7 @@ Il tuo compito è guidare l'utente passo dopo passo nelle pratiche amministrativ
 
 REGOLE DI COMPORTAMENTO:
 - Rispondi SEMPRE nella stessa lingua in cui ti scrive l'utente (italiano, inglese, francese, arabo, cinese, spagnolo, ecc.)
+- Se l'utente scrive in arabo, rispondi ESCLUSIVAMENTE in arabo. Se scrive in francese, rispondi ESCLUSIVAMENTE in francese. Nessuna frase in italiano nelle risposte in altra lingua.
 - Usa un linguaggio semplice, evita termini tecnici senza spiegarli
 - Sii concreto: elenca i passi da seguire, i documenti necessari, gli uffici da contattare
 - Se non conosci la risposta esatta, dillo e suggerisci dove trovare informazioni aggiornate
@@ -38,13 +40,48 @@ STRUTTURA DELLE RISPOSTE:
 - Chiudi sempre chiedendo se l'utente ha bisogno di approfondire qualcosa
 
 AGGIORNAMENTO PROFILO:
-Se durante la conversazione l'utente menziona di aver ottenuto un documento o di aver cambiato situazione (es. "ho già il codice fiscale", "ho trovato lavoro", "ho un figlio a carico"), aggiungi alla FINE della tua risposta questo blocco JSON (non mostrarlo all'utente, sarà rimosso automaticamente):
+Se durante la conversazione l'utente menziona di aver ottenuto un documento NON già presente nel suo profilo, aggiungi alla FINE della tua risposta questo blocco JSON (non mostrarlo all'utente, sarà rimosso automaticamente):
 <!--PROFILE_UPDATE:{"documentsObtained":["codice_fiscale"]}-->
 I valori validi per documentsObtained sono: codice_fiscale, permesso_soggiorno, residenza, spid, tessera_sanitaria.
+NON emettere il blocco PROFILE_UPDATE per documenti già elencati nel profilo utente sopra.
 
 Ricorda: l'utente potrebbe avere poca dimestichezza con la burocrazia italiana e con il digitale. Sii paziente, chiaro e incoraggiante.`;
 
 const PROFILE_UPDATE_REGEX = /<!--PROFILE_UPDATE:([\s\S]*?)-->/;
+
+// Detects user language from messages and returns an explicit lock instruction
+function buildLanguageLock(messages: Message[]): string {
+  const userText = messages
+    .filter((m) => m.role === "user")
+    .map((m) => m.content)
+    .join(" ");
+
+  if (/[؀-ۿ]/.test(userText))
+    return "\n\n[LANGUAGE LOCK] The user writes in Arabic. You MUST respond EXCLUSIVELY in Arabic (العربية). Do not write a single word in Italian or any other language.";
+  if (/[一-鿿㐀-䶿]/.test(userText))
+    return "\n\n[LANGUAGE LOCK] The user writes in Chinese. You MUST respond EXCLUSIVELY in Chinese (中文). Do not write any Italian.";
+  if (/[Ѐ-ӿ]/.test(userText))
+    return "\n\n[LANGUAGE LOCK] The user writes in a Cyrillic-script language. You MUST respond EXCLUSIVELY in that language. Do not write any Italian.";
+
+  const lower = userText.toLowerCase();
+  if (/\b(the|and|for|how|can|i |my|do |what|where|when|get|need|have|is |it |you|help|please|want|already|just|arrived)\b/.test(lower))
+    return "\n\n[LANGUAGE LOCK] The user writes in English. You MUST respond EXCLUSIVELY in English. Do not write any Italian.";
+  if (/\b(je |vous|nous|le |la |les |un |une |des |et |ou |comment|pour |avec|mon |ma |mes |est |pas |que |qui |bonjour|merci)\b/.test(lower))
+    return "\n\n[LANGUAGE LOCK] L'utilisateur écrit en français. Vous DEVEZ répondre EXCLUSIVEMENT en français. N'écrivez pas en italien.";
+  if (/\b(yo |tu |él |ella|como|para|con |que |por |una |un |los |las |mi |su |es |no |en |hola|gracias|quiero|necesito)\b/.test(lower))
+    return "\n\n[LANGUAGE LOCK] El usuario escribe en español. Debes responder EXCLUSIVAMENTE en español. No escribas en italiano.";
+
+  return "";
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (typeof error === "object" && error !== null) {
+    const msg = String((error as { message?: string }).message ?? "");
+    const status = (error as { status?: number }).status;
+    return status === 429 || msg.includes("429") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("rate");
+  }
+  return false;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,12 +97,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const systemPrompt = userProfile
-      ? `${BASE_SYSTEM_PROMPT}\n\n${formatProfileForPrompt(userProfile)}`
-      : BASE_SYSTEM_PROMPT;
+    const languageLock = buildLanguageLock(messages);
+    const systemPrompt = [
+      BASE_SYSTEM_PROMPT,
+      languageLock,
+      userProfile ? formatProfileForPrompt(userProfile) : "",
+    ].filter(Boolean).join("\n\n");
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: GEMINI_MODEL,
       systemInstruction: systemPrompt,
     });
 
@@ -91,6 +131,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: messageText, profileUpdate });
   } catch (error) {
     console.error("Errore API chat:", error);
+    if (isRateLimitError(error)) {
+      return NextResponse.json(
+        { error: "Il servizio è temporaneamente sovraccarico. Riprova tra qualche secondo." },
+        { status: 429 }
+      );
+    }
     return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
   }
 }

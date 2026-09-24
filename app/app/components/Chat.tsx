@@ -72,6 +72,9 @@ export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizard
 
       const data = await res.json();
 
+      if (res.status === 429) {
+        throw new Error(data.error || "Il servizio è momentaneamente sovraccarico. Riprova tra qualche secondo.");
+      }
       if (!res.ok) {
         throw new Error(data.error || "Errore sconosciuto");
       }
@@ -132,8 +135,8 @@ export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizard
             <div
               className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-blue-600 text-white rounded-br-sm"
-                  : "bg-gray-100 text-gray-800 rounded-bl-sm"
+                  ? "bg-blue-100 text-black rounded-br-sm"
+                  : "bg-gray-50 text-gray-800 rounded-bl-sm"
               }`}
             >
               {msg.content}
@@ -143,7 +146,7 @@ export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizard
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-sm">
+            <div className="bg-gray-50 px-4 py-3 rounded-2xl rounded-bl-sm">
               <span className="flex gap-1">
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
@@ -185,7 +188,7 @@ export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizard
           }}
           placeholder="Scrivi la tua domanda... / Write your question..."
           rows={1}
-          className="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 overflow-y-auto"
+          className="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32 overflow-y-auto"
         />
         <button
           onClick={() => sendMessage(input)}
