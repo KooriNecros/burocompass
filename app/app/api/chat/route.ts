@@ -1,9 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
-import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
-import { UserProfile, formatProfileForPrompt } from "@/lib/profile";
+import { UserProfile, Message, formatProfileForPrompt } from "@/lib/profile";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY ?? "");
 
 const BASE_SYSTEM_PROMPT = `Sei BuroCompass, un assistente digitale che aiuta persone straniere a orientarsi nella burocrazia italiana.
 
@@ -50,13 +49,13 @@ const PROFILE_UPDATE_REGEX = /<!--PROFILE_UPDATE:([\s\S]*?)-->/;
 export async function POST(req: NextRequest) {
   try {
     const { messages, userProfile } = await req.json() as {
-      messages: MessageParam[];
+      messages: Message[];
       userProfile?: UserProfile;
     };
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.GOOGLE_AI_API_KEY) {
       return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY non configurata. Aggiungila nel file .env.local" },
+        { error: "GOOGLE_AI_API_KEY non configurata. Ottienila gratis su aistudio.google.com/apikey" },
         { status: 500 }
       );
     }
@@ -65,19 +64,18 @@ export async function POST(req: NextRequest) {
       ? `${BASE_SYSTEM_PROMPT}\n\n${formatProfileForPrompt(userProfile)}`
       : BASE_SYSTEM_PROMPT;
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-5",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages,
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      systemInstruction: systemPrompt,
     });
 
-    const content = response.content[0];
-    if (content.type !== "text") {
-      return NextResponse.json({ error: "Risposta inattesa dal modello" }, { status: 500 });
-    }
+    const contents = messages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
 
-    let messageText = content.text;
+    const response = await model.generateContent({ contents });
+    let messageText = response.response.text();
     let profileUpdate: Partial<UserProfile> | undefined;
 
     const match = messageText.match(PROFILE_UPDATE_REGEX);
