@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { UserProfile, Message, formatProfileForPrompt } from "@/lib/profile";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY ?? "");
-const GEMINI_MODEL = process.env.GOOGLE_AI_MODEL ?? "gemini-2.0-flash";
+const GEMINI_MODEL = process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash";
 
 const BASE_SYSTEM_PROMPT = `Sei BuroCompass, un assistente digitale che aiuta persone straniere a orientarsi nella burocrazia italiana.
 
