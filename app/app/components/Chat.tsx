@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { UserProfile, Message, loadHistory, saveHistory, updateProfileFields } from "@/lib/profile";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
+interface Props {
+  profile: UserProfile | null;
+  onWizardTrigger: () => void;
+  onProfileUpdate: (label: string) => void;
+  wizardOpen: boolean;
 }
 
 const QUICK_QUESTIONS = [
@@ -14,18 +17,43 @@ const QUICK_QUESTIONS = [
   "Come faccio la residenza?",
 ];
 
-export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+const WIZARD_KEYWORDS = [
+  "permesso di soggiorno", "permesso soggiorno", "residence permit",
+  "permis de séjour", "إقامة", "居留许可",
+];
+
+const DOC_LABELS: Record<string, string> = {
+  codice_fiscale: "codice fiscale",
+  permesso_soggiorno: "permesso di soggiorno",
+  residenza: "residenza",
+  spid: "SPID",
+  tessera_sanitaria: "tessera sanitaria",
+};
+
+export default function Chat({ profile, onWizardTrigger, onProfileUpdate, wizardOpen }: Props) {
+  const [messages, setMessages] = useState<Message[]>(() => loadHistory());
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showWizardSuggestion, setShowWizardSuggestion] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  useEffect(() => {
+    saveHistory(messages);
+  }, [messages]);
+
+  function detectWizardTrigger(text: string): boolean {
+    const lower = text.toLowerCase();
+    return WIZARD_KEYWORDS.some((kw) => lower.includes(kw));
+  }
+
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
+
+    setShowWizardSuggestion(false);
 
     const userMessage: Message = { role: "user", content: text };
     const updatedMessages = [...messages, userMessage];
@@ -33,11 +61,13 @@ export default function Chat() {
     setInput("");
     setLoading(true);
 
+    const triggersWizard = detectWizardTrigger(text);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ messages: updatedMessages, userProfile: profile }),
       });
 
       const data = await res.json();
@@ -46,7 +76,20 @@ export default function Chat() {
         throw new Error(data.error || "Errore sconosciuto");
       }
 
-      setMessages([...updatedMessages, { role: "assistant", content: data.message }]);
+      const assistantMessage: Message = { role: "assistant", content: data.message };
+      setMessages([...updatedMessages, assistantMessage]);
+
+      if (data.profileUpdate) {
+        updateProfileFields(data.profileUpdate);
+        const labels = (data.profileUpdate.documentsObtained as string[] | undefined)
+          ?.map((d: string) => DOC_LABELS[d] ?? d)
+          .join(", ");
+        if (labels) onProfileUpdate(labels);
+      }
+
+      if (triggersWizard && !wizardOpen) {
+        setShowWizardSuggestion(true);
+      }
     } catch (err) {
       setMessages([
         ...updatedMessages,
@@ -61,20 +104,12 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-blue-700">🧭 BuroCompass</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Il tuo assistente per la burocrazia italiana · Your guide to Italian bureaucracy
-        </p>
-      </div>
-
+    <div className="flex flex-col h-full px-4 py-4">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-400 mt-12 space-y-6">
-            <p className="text-lg">Come posso aiutarti oggi?</p>
+          <div className="text-center text-gray-400 mt-8 space-y-6">
+            <p className="text-base">Come posso aiutarti oggi?</p>
             <div className="grid grid-cols-1 gap-2">
               {QUICK_QUESTIONS.map((q) => (
                 <button
@@ -114,6 +149,22 @@ export default function Chat() {
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
               </span>
+            </div>
+          </div>
+        )}
+
+        {showWizardSuggestion && !wizardOpen && (
+          <div className="flex justify-start">
+            <div className="bg-blue-50 border border-blue-200 px-4 py-3 rounded-2xl rounded-bl-sm max-w-[85%]">
+              <p className="text-sm text-blue-800 mb-2">
+                Vuoi che ti guidi passo dopo passo nella procedura?
+              </p>
+              <button
+                onClick={() => { setShowWizardSuggestion(false); onWizardTrigger(); }}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+              >
+                Apri guida guidata →
+              </button>
             </div>
           </div>
         )}
