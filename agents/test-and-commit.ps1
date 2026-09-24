@@ -1,10 +1,14 @@
 # test-and-commit.ps1
-# Runs TypeScript type-check + Next.js build. If both pass, commits and pushes.
-# Usage: .\agents\test-and-commit.ps1 [-Message "commit message"]
-#        .\agents\test-and-commit.ps1          # auto-generates message from git diff
+# Runs TypeScript type-check + Next.js build. If both pass, commits, pushes,
+# and optionally closes a GitHub issue.
+# Usage:
+#   .\agents\test-and-commit.ps1
+#   .\agents\test-and-commit.ps1 -Message "commit message"
+#   .\agents\test-and-commit.ps1 -Message "Fix #3: language regression" -IssueNumber 3
 
 param(
-  [string]$Message = ""
+  [string]$Message     = "",
+  [int]   $IssueNumber = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -67,12 +71,13 @@ try {
   # ── Step 4: Commit ────────────────────────────────────────────────────────
   Write-Step "Committing"
   if (-not $Message) {
-    # Auto-generate from changed file names
     $files = (git diff --cached --name-only) -join ", "
     $Message = "Update $files"
   }
 
-  $fullMessage = "$Message`n`nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+  # Append "Closes #N" to commit message if issue number provided
+  $closeClause = if ($IssueNumber -gt 0) { "`n`nCloses #$IssueNumber" } else { "" }
+  $fullMessage = "$Message$closeClause`n`nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
   git commit -m $fullMessage
   if ($LASTEXITCODE -ne 0) {
     Write-Fail "Commit failed."
@@ -83,12 +88,26 @@ try {
 
   # ── Step 5: Push ──────────────────────────────────────────────────────────
   Write-Step "Pushing to GitHub"
-  git push
+  $branch = git branch --show-current
+  git push --set-upstream origin $branch
   if ($LASTEXITCODE -ne 0) {
     Write-Fail "Push failed. Commit exists locally ($sha), push manually."
     exit 1
   }
-  Write-Ok "Pushed to origin/master."
+  Write-Ok "Pushed branch '$branch' to origin."
+
+  # ── Step 6: Close GitHub issue ────────────────────────────────────────────
+  if ($IssueNumber -gt 0) {
+    Write-Step "Closing GitHub issue #$IssueNumber"
+    gh issue close $IssueNumber `
+      --repo KooriNecros/burocompass `
+      --comment "Resolved in commit $sha on branch ``$branch``. Fix verified: tsc + build passed."
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "    [WARN] Could not close issue #$IssueNumber — close it manually." -ForegroundColor Yellow
+    } else {
+      Write-Ok "Issue #$IssueNumber closed."
+    }
+  }
 
 } finally {
   Pop-Location

@@ -93,34 +93,27 @@ If build fails:
 
 ---
 
-## Step 5 — Commit and push (via test-and-commit script)
+## Step 5 — Commit, push and close issue (via test-and-commit script)
 
 If both checks pass:
 
 ```powershell
 cd "C:\Users\francesco.giovo\OneDrive - Accenture\hackaton"
-.\agents\test-and-commit.ps1 -Message "Fix #<number>: <issue title>"
+.\agents\test-and-commit.ps1 -Message "Fix #<number>: <issue title>" -IssueNumber <number>
 ```
 
 This script will:
 1. Re-run `npx tsc --noEmit` + `npm run build`
 2. Stage changed files (excluding .env files)
-3. Commit with the provided message + Co-Authored-By attribution
-4. Push `fix/issue-<number>-<slug>` to origin
+3. Commit with message + `Closes #<number>` + Co-Authored-By attribution
+4. Push `fix/issue-<number>-<slug>` to origin with `--set-upstream`
+5. Close GitHub issue #<number> with a comment referencing the commit SHA
 
 ---
 
-## Step 6 — Comment on the GitHub issue
+## Step 6 — Comment on the GitHub issue (failure only)
 
-After a successful push:
-
-```bash
-gh issue comment <number> \
-  --repo KooriNecros/burocompass \
-  --body "Fixed in branch \`fix/issue-<number>-<slug>\`. Changes: <1-sentence summary of what was changed and why>."
-```
-
-After a failed fix:
+The test-and-commit script closes the issue automatically on success (with commit SHA and branch reference). You only need to comment manually on failure:
 
 ```bash
 gh issue comment <number> \
