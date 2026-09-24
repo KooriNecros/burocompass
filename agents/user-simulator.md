@@ -8,12 +8,7 @@ Sub-agent Claude Code per il test intensivo e la QA dell'applicazione BuroCompas
 
 ## Scopo
 
-Simula una persona straniera con bassa alfabetizzazione digitale che interagisce con BuroCompass via API. Al termine della sessione produce un report strutturato con:
-
-- Risultato per ogni turno (OK / errore)
-- **Deviazioni dal piano di design** (confronto con `design/design-decisions.md`)
-- **Errori HTTP** o risposte inattese
-- Raccomandazioni di miglioramento
+Simula una persona straniera con bassa alfabetizzazione digitale che interagisce con BuroCompass via API. Quando rileva un'issue (errore bloccante, deviazione dal piano di design, comportamento inatteso), **apre immediatamente un issue su GitHub** e prosegue il test senza interruzioni.
 
 ---
 
@@ -21,13 +16,13 @@ Simula una persona straniera con bassa alfabetizzazione digitale che interagisce
 
 ```
 Agent(subagent_type: "user-simulator")                      # lingua casuale
-Agent(subagent_type: "user-simulator", args: "english")     # inglese
-Agent(subagent_type: "user-simulator", args: "français")    # francese
-Agent(subagent_type: "user-simulator", args: "العربية")     # arabo
-Agent(subagent_type: "user-simulator", args: "español")     # spagnolo
-Agent(subagent_type: "user-simulator", args: "українська")  # ucraino
-Agent(subagent_type: "user-simulator", args: "中文")         # cinese
-Agent(subagent_type: "user-simulator", args: "italiano")    # italiano
+Agent(subagent_type: "user-simulator", args: "english")
+Agent(subagent_type: "user-simulator", args: "français")
+Agent(subagent_type: "user-simulator", args: "العربية")
+Agent(subagent_type: "user-simulator", args: "español")
+Agent(subagent_type: "user-simulator", args: "українська")
+Agent(subagent_type: "user-simulator", args: "中文")
+Agent(subagent_type: "user-simulator", args: "italiano")
 ```
 
 ---
@@ -46,70 +41,63 @@ Agent(subagent_type: "user-simulator", args: "italiano")    # italiano
 
 ---
 
+## Protocollo di apertura issue
+
+Quando viene rilevata un'issue, l'agente esegue immediatamente:
+
+```bash
+gh issue create \
+  --repo KooriNecros/burocompass \
+  --title "[QA][<LANG>] <descrizione breve>" \
+  --label "bug" \
+  --body "..."
+```
+
+Poi **prosegue al turno successivo** senza interrompere la sessione.
+
+### Trigger per apertura issue
+
+| Evento | Label | Severity |
+|---|---|---|
+| HTTP 500 su qualsiasi turno | `bug` | Critical |
+| HTTP 429 senza messaggio retry | `bug` | High |
+| Risposta in lingua sbagliata | `bug` | High |
+| Blocco PROFILE_UPDATE visibile nel message | `bug` | Medium |
+| PROFILE_UPDATE non emesso dopo menzione documento | `bug` | Medium |
+| Nessun passo numerato in risposta procedurale | `deviation` | Medium |
+| Nessun riferimento ufficio | `deviation` | Low |
+| Nessuna domanda di chiusura | `deviation` | Low |
+| Linguaggio legale prescrittivo rilevato | `bug` | High |
+| Connection refused / crash | `bug` | Critical |
+
+---
+
 ## Turni di test (7 obbligatori)
 
-| Turno | Scenario | Cosa verifica |
+| Turno | Scenario | Contratto verificato |
 |---|---|---|
-| 1 | Domanda apertura su permesso di soggiorno | Lingua corretta, passi numerati |
-| 2 | Follow-up su un documento specifico | Lingua coerente, ufficio citato |
-| 3 | Menziona documento già ottenuto | `PROFILE_UPDATE` presente nel raw, assente nel message |
-| 4 | Menziona familiare in Italia | Risposta adattata al contesto familiare |
-| 5 | Ri-menziona permesso di soggiorno | Nessun errore server |
-| 6 | Domanda fuori scope (banca, scuola, patente) | Risposta graceful, no rifiuto |
-| 7 | Messaggio ambiguo o rotto | Nessun errore 500 |
+| 1 | Apertura su permesso di soggiorno | Q3, SP steps, SP offices, SP question |
+| 2 | Follow-up documento specifico | Q3 coerenza |
+| 3 | Documento già ottenuto | Q8 emissione + stripping |
+| 4 | Familiare in Italia | Adattamento contesto |
+| 5 | Ri-menziona permesso | Q11 no 500 |
+| 6 | Domanda fuori scope | Gestione graceful |
+| 7 | Messaggio ambiguo/rotto | No 500, recovery |
 
 ---
 
-## Contratti di design verificati
+## Report finale
 
-Estratti da `design/design-decisions.md`:
-
-| Ref | Contratto | Criteri |
-|---|---|---|
-| Q3 | Auto-detect lingua | Ogni risposta nella lingua dell'utente |
-| Q8 | PROFILE_UPDATE emesso | Blocco HTML nel raw JSON al turno 3 |
-| Q8 | PROFILE_UPDATE rimosso | Campo `message` pulito (no HTML comment) |
-| Q11 | Keyword wizard sicure | Nessun errore server al trigger |
-| SP | Passi numerati | Procedure elencate con numeri |
-| SP | Riferimenti uffici | Almeno un ufficio citato per risposta |
-| SP | Domanda di chiusura | Ogni risposta termina con una domanda |
-| SP | No consulenza legale | Nessuna prescrizione legale diretta |
-
----
-
-## Esempio report
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║              BUROCOMPASS — TEST REPORT                      ║
-╠══════════════════════════════════════════════════════════════╣
-║ Language   : english                                        ║
-║ Persona    : Emeka — Nigerian, just arrived, no documents   ║
-║ Turns      : 7                                              ║
-║ HTTP Errors: 0                                              ║
-╚══════════════════════════════════════════════════════════════╝
-
-── DEVIATIONS FROM DESIGN PLAN ──────────────────────────────
-
-[Q3]  Auto-detect language         ✓  All 7 responses in English
-[Q8]  PROFILE_UPDATE emitted       ✓  Found in raw response turn 3
-[Q8]  PROFILE_UPDATE stripped      ✓  message field clean
-[Q11] Wizard keywords safe         ✓  No 500 errors
-[SP]  Numbered steps               ⚠  Turn 6 response had no numbered list
-[SP]  Office references            ✓  Questura/Comune cited in turns 1,2,5
-[SP]  Closing question             ✗  Turns 4 and 7 had no closing question
-[SP]  No legal advice              ✓
-
-── RECOMMENDATIONS ───────────────────────────────────────────
-1. System prompt closing question rule not consistently applied — consider
-   adding a stricter reminder at the end of BASE_SYSTEM_PROMPT
-2. Out-of-scope responses (bank account) lack numbered steps — add to
-   system prompt that ALL procedural answers must use numbered lists
-```
+Alla fine dei 7 turni, il report include:
+- Risultato per ogni turno
+- Tabella deviazioni dal piano
+- **Elenco issue GitHub aperte con link**
+- Raccomandazioni
 
 ---
 
 ## Prerequisiti
 
-- Server in esecuzione su `localhost:3000` (`npm run dev` in `app/`)
-- `GOOGLE_AI_API_KEY` configurata in `app/.env.local`
+- Server in esecuzione su `localhost:3000`
+- `GOOGLE_AI_API_KEY` valida in `app/.env.local`
+- `gh` autenticato (`gh auth status`)
