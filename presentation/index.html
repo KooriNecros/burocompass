@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BuroCompass — Hackathon Presentation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      overflow: hidden;
+    }
+
+    .slides { width: 100vw; height: 100vh; position: relative; }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px;
+      text-align: center;
+    }
+    .slide.active { display: flex; }
+
+    /* Slide 1 — Cover */
+    .slide-cover { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0284c7 100%); }
+    .slide-cover .emoji { font-size: 80px; margin-bottom: 20px; }
+    .slide-cover h1 { font-size: 64px; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .slide-cover .tagline { font-size: 22px; color: #bfdbfe; margin-bottom: 40px; }
+    .slide-cover .team { font-size: 16px; color: #93c5fd; }
+
+    /* Slide 2 — Problem */
+    .slide-problem { background: #1e293b; }
+    .slide-problem h2 { font-size: 40px; font-weight: 700; color: #f97316; margin-bottom: 40px; }
+    .problems { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 900px; }
+    .problem-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: left;
+    }
+    .problem-card .icon { font-size: 32px; margin-bottom: 12px; }
+    .problem-card h3 { font-size: 16px; font-weight: 600; color: #f97316; margin-bottom: 8px; }
+    .problem-card p { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+
+    /* Slide 3 — Solution */
+    .slide-solution { background: linear-gradient(180deg, #0f172a 0%, #0c1a35 100%); }
+    .slide-solution h2 { font-size: 40px; font-weight: 700; color: #60a5fa; margin-bottom: 40px; }
+    .features { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: 100%; max-width: 960px; }
+    .feature {
+      background: #1e293b;
+      border: 1px solid #1e40af;
+      border-radius: 16px;
+      padding: 28px 20px;
+    }
+    .feature .icon { font-size: 36px; margin-bottom: 14px; }
+    .feature h3 { font-size: 16px; font-weight: 700; color: #93c5fd; margin-bottom: 8px; }
+    .feature p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+    /* Slide 4 — Architecture */
+    .slide-arch { background: #0f172a; }
+    .slide-arch h2 { font-size: 40px; font-weight: 700; color: #34d399; margin-bottom: 40px; }
+    .arch-diagram {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 40px 60px;
+      font-family: "Courier New", monospace;
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 2;
+      text-align: left;
+      max-width: 860px;
+      width: 100%;
+    }
+    .arch-diagram .highlight { color: #34d399; font-weight: bold; }
+    .arch-diagram .dim { color: #475569; }
+
+    /* Slide 5 — Stack */
+    .slide-stack { background: #1e293b; }
+    .slide-stack h2 { font-size: 40px; font-weight: 700; color: #a78bfa; margin-bottom: 40px; }
+    .stack-items { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
+    .stack-item {
+      background: #0f172a;
+      border: 1px solid #4c1d95;
+      border-radius: 14px;
+      padding: 20px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .stack-item .icon { font-size: 36px; }
+    .stack-item span { font-size: 14px; font-weight: 600; color: #c4b5fd; }
+    .stack-item small { font-size: 12px; color: #6b7280; }
+
+    /* Slide 6 — Demo */
+    .slide-demo { background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #0f4c35 100%); }
+    .slide-demo h2 { font-size: 48px; font-weight: 800; margin-bottom: 20px; }
+    .slide-demo .sub { font-size: 22px; color: #6ee7b7; margin-bottom: 50px; }
+    .demo-steps { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+    .demo-step {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 20px;
+      width: 160px;
+      text-align: center;
+    }
+    .demo-step .num { font-size: 28px; font-weight: 800; color: #34d399; }
+    .demo-step p { font-size: 13px; color: #a7f3d0; margin-top: 8px; line-height: 1.4; }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50px;
+      padding: 10px 20px;
+      z-index: 100;
+    }
+    nav button {
+      background: none;
+      border: none;
+      color: #f1f5f9;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    nav button:hover { background: rgba(255,255,255,0.1); }
+    nav button:disabled { opacity: 0.3; cursor: default; }
+    .dots { display: flex; gap: 8px; }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .dot.active { background: #60a5fa; }
+    .slide-counter { font-size: 13px; color: #64748b; min-width: 40px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="slides">
+
+  <!-- Slide 1: Cover -->
+  <div class="slide slide-cover active">
+    <div class="emoji">🧭</div>
+    <h1>BuroCompass</h1>
+    <p class="tagline">L'assistente digitale per stranieri nella burocrazia italiana</p>
+    <p class="team">Francesco Giovo &amp; Manuel Marseglia — Hackathon 2026</p>
+  </div>
+
+  <!-- Slide 2: Problem -->
+  <div class="slide slide-problem">
+    <h2>Il Problema</h2>
+    <div class="problems">
+      <div class="problem-card">
+        <div class="icon">🗣️</div>
+        <h3>Barriera linguistica</h3>
+        <p>Il linguaggio burocratico italiano è opaco anche per gli italofoni. Per gli stranieri è invalicabile senza supporto.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🏛️</div>
+        <h3>Frammentazione degli enti</h3>
+        <p>Comune, Questura, Prefettura, INPS, ASL: ogni pratica porta a un ente diverso con regole diverse.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🔄</div>
+        <h3>Circolo vizioso del digitale</h3>
+        <p>Serve SPID per accedere ai servizi, ma per ottenere SPID servono documenti che richiedono altri servizi.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon">🧩</div>
+        <h3>Dipendenza da intermediari</h3>
+        <p>Chi non ce la fa si affida a patronati o conoscenti, restando vulnerabile alla prossima pratica.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 3: Solution -->
+  <div class="slide slide-solution">
+    <h2>La Soluzione</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="icon">💬</div>
+        <h3>Chat multilingue</h3>
+        <p>Risponde nella lingua dell'utente. Auto-detect automatico. Nessun selettore.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">📋</div>
+        <h3>Wizard guidato</h3>
+        <p>Flow step-by-step per il permesso di soggiorno. Checklist documenti personalizzata.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">👤</div>
+        <h3>Profilo adattivo</h3>
+        <p>L'agente apprende dalla conversazione e aggiorna il profilo utente in automatico.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">💾</div>
+        <h3>Zero server esterni</h3>
+        <p>Tutto gira in locale. Profilo e storico salvati in localStorage.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🎯</div>
+        <h3>Linguaggio semplice</h3>
+        <p>Niente gergo burocratico. Passi numerati. Uffici indicati per ogni procedura.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">📱</div>
+        <h3>Mobile first</h3>
+        <p>Ottimizzato per smartphone. Layout adattivo con tab per wizard e chat.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4: Architecture -->
+  <div class="slide slide-arch">
+    <h2>Architettura Agentica</h2>
+    <div class="arch-diagram">
+      <span class="dim">UTENTE</span> → <span class="highlight">Chat Interface</span> → <span class="highlight">BuroCompass Agent</span> (Claude Sonnet)<br>
+      <br>
+      <span class="highlight">BuroCompass Agent</span><br>
+      <span class="dim">  ├─ System prompt base (ruolo + competenze)</span><br>
+      <span class="dim">  ├─ Profilo utente iniettato dinamicamente</span><br>
+      <span class="dim">  ├─ Risposta in lingua dell'utente</span><br>
+      <span class="dim">  └─ Emette </span><span class="highlight">&lt;!--PROFILE_UPDATE:{...}--&gt;</span><span class="dim"> se apprende info nuove</span><br>
+      <br>
+      <span class="highlight">Route Handler</span> (Next.js API)<br>
+      <span class="dim">  ├─ Parsa il blocco PROFILE_UPDATE dalla risposta</span><br>
+      <span class="dim">  ├─ Rimuove il blocco dal testo visibile</span><br>
+      <span class="dim">  └─ Ritorna </span><span class="highlight">{ message, profileUpdate? }</span><br>
+      <br>
+      <span class="highlight">localStorage</span><span class="dim"> ← profilo + storico (max 10 msg)</span>
+    </div>
+  </div>
+
+  <!-- Slide 5: Stack -->
+  <div class="slide slide-stack">
+    <h2>Stack Tecnologico</h2>
+    <div class="stack-items">
+      <div class="stack-item">
+        <div class="icon">▲</div>
+        <span>Next.js 16</span>
+        <small>App Router + API Routes</small>
+      </div>
+      <div class="stack-item">
+        <div class="icon">🤖</div>
+        <span>Claude Sonnet</span>
+        <small>Anthropic SDK</small>
+      </div>
+      <div class="stack-item">
+        <div class="icon">🔷</div>
+        <span>TypeScript</span>
+        <small>Type-safe end-to-end</small>
+      </div>
+      <div class="stack-item">
+        <div class="icon">🎨</div>
+        <span>Tailwind CSS v4</span>
+        <small>Mobile-first UI</small>
+      </div>
+      <div class="stack-item">
+        <div class="icon">💾</div>
+        <span>localStorage</span>
+        <small>Profilo + storico</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 6: Demo -->
+  <div class="slide slide-demo">
+    <h2>Demo Flow</h2>
+    <p class="sub">Primo avvio → Onboarding → Chat → Wizard → Profilo aggiornato</p>
+    <div class="demo-steps">
+      <div class="demo-step">
+        <div class="num">1</div>
+        <p>Primo avvio: modale onboarding (5 campi)</p>
+      </div>
+      <div class="demo-step">
+        <div class="num">2</div>
+        <p>Chat multilingue con suggerimenti rapidi</p>
+      </div>
+      <div class="demo-step">
+        <div class="num">3</div>
+        <p>Keyword "permesso" → proposta wizard</p>
+      </div>
+      <div class="demo-step">
+        <div class="num">4</div>
+        <p>Wizard: 5 step, checklist documenti</p>
+      </div>
+      <div class="demo-step">
+        <div class="num">5</div>
+        <p>"Ho il codice fiscale" → profilo aggiornato ✓</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<nav>
+  <button id="prev" onclick="changeSlide(-1)" disabled>‹</button>
+  <div class="dots" id="dots"></div>
+  <button id="next" onclick="changeSlide(1)">›</button>
+  <span class="slide-counter" id="counter">1 / 6</span>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsContainer = document.getElementById('dots');
+  let current = 0;
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goTo(i);
+    dotsContainer.appendChild(dot);
+  });
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    dotsContainer.children[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, slides.length - 1));
+    slides[current].classList.add('active');
+    dotsContainer.children[current].classList.add('active');
+    document.getElementById('prev').disabled = current === 0;
+    document.getElementById('next').disabled = current === slides.length - 1;
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + slides.length;
+  }
+
+  function changeSlide(dir) { goTo(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  });
+</script>
+</body>
+</html>

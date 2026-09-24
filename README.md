@@ -4,7 +4,7 @@ Progetto sviluppato per hackathon.
 
 ## Team
 - Francesco Giovo
-- [Collega da aggiungere]
+- Manuel Marseglia
 
 ---
 
@@ -105,19 +105,22 @@ Quando la persona non riesce ad autonomarsi si rivolge a patronati, CAF, associa
 
 ---
 
-## Structure
+## Struttura del progetto
 
 ```
-├── backend/        # API / server-side logic
-├── frontend/       # UI / client-side
-├── docs/           # documentazione, diagrammi, note
-└── .github/
-    └── workflows/  # CI/CD (opzionale)
+├── app/            # Applicazione Next.js (chatbot + wizard + profilo utente)
+├── agents/         # Architettura agentica e documentazione del sistema AI
+├── presentation/   # Presentazione HTML del progetto
+└── README.md
 ```
 
 ## Getting started
 
-_Istruzioni di setup da aggiungere una volta definito lo stack._
+```bash
+cd app
+npm install
+cp .env.example .env.local   # aggiungi ANTHROPIC_API_KEY
+npm run dev
+```
 
-1. Clone: `git clone <url>`
-2. Vedi `backend/README.md` e `frontend/README.md` per il setup dei singoli moduli.
+Apri [http://localhost:3000](http://localhost:3000) nel browser.
