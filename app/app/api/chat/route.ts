@@ -41,7 +41,7 @@ STRUTTURA DELLE RISPOSTE:
 
 AGGIORNAMENTO PROFILO:
 Se durante la conversazione l'utente menziona di aver ottenuto un documento NON già presente nel suo profilo, aggiungi alla FINE della tua risposta questo blocco JSON (non mostrarlo all'utente, sarà rimosso automaticamente):
-<!--PROFILE_UPDATE:{"documentsObtained":["codice_fiscale"]}-->
+<!--PROFILE_UPDATE:{"documentsObtained":["permesso_soggiorno"]}-->
 I valori validi per documentsObtained sono: codice_fiscale, permesso_soggiorno, residenza, spid, tessera_sanitaria.
 NON emettere il blocco PROFILE_UPDATE per documenti già elencati nel profilo utente sopra.
 
@@ -74,16 +74,33 @@ function buildLanguageLock(messages: Message[]): string {
   return "";
 }
 
+function getLocalizedErrors(languageLock: string): { rate: string; internal: string } {
+  if (languageLock.includes("Arabic"))
+    return { rate: "الخدمة مشغولة مؤقتًا. يرجى المحاولة مرة أخرى بعد لحظات.", internal: "حدث خطأ داخلي." };
+  if (languageLock.includes("Chinese"))
+    return { rate: "服务暂时超载，请稍后重试。", internal: "服务器内部错误。" };
+  if (languageLock.includes("English"))
+    return { rate: "The service is temporarily overloaded. Please try again in a moment.", internal: "Internal server error." };
+  if (languageLock.includes("français"))
+    return { rate: "Le service est temporairement surchargé. Veuillez réessayer dans quelques secondes.", internal: "Erreur interne du serveur." };
+  if (languageLock.includes("español"))
+    return { rate: "El servicio está temporalmente sobrecargado. Por favor, inténtelo de nuevo en un momento.", internal: "Error interno del servidor." };
+  if (languageLock.includes("Cyrillic"))
+    return { rate: "Сервіс тимчасово перевантажений. Спробуйте ще раз за мить.", internal: "Внутрішня помилка сервера." };
+  return { rate: "Il servizio è temporaneamente sovraccarico. Riprova tra qualche secondo.", internal: "Errore interno del server." };
+}
+
 function isRateLimitError(error: unknown): boolean {
   if (typeof error === "object" && error !== null) {
     const msg = String((error as { message?: string }).message ?? "");
     const status = (error as { status?: number }).status;
-    return status === 429 || msg.includes("429") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("rate");
+    return status === 429 || msg.includes("[429") || msg.toLowerCase().includes("quota exceeded") || msg.toLowerCase().includes("rate limit");
   }
   return false;
 }
 
 export async function POST(req: NextRequest) {
+  let languageLock = "";
   try {
     const { messages, userProfile } = await req.json() as {
       messages: Message[];
@@ -97,10 +114,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const languageLock = buildLanguageLock(messages);
+    languageLock = buildLanguageLock(messages);
     const systemPrompt = [
-      BASE_SYSTEM_PROMPT,
       languageLock,
+      BASE_SYSTEM_PROMPT,
       userProfile ? formatProfileForPrompt(userProfile) : "",
     ].filter(Boolean).join("\n\n");
 
@@ -131,12 +148,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: messageText, profileUpdate });
   } catch (error) {
     console.error("Errore API chat:", error);
+    const errs = getLocalizedErrors(languageLock);
     if (isRateLimitError(error)) {
-      return NextResponse.json(
-        { error: "Il servizio è temporaneamente sovraccarico. Riprova tra qualche secondo." },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: errs.rate }, { status: 429 });
     }
-    return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
+    return NextResponse.json({ error: errs.internal }, { status: 500 });
   }
 }
